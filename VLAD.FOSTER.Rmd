@@ -1,0 +1,775 @@
+---
+title: "VLAD.FOSTER"
+author: "Vlad"
+date: "2022-11-06"
+output: html_document
+---
+
+### Set up Chunk
+
+```{r setup, include=F}
+library(gplots)
+library(ggplot2)
+library(dplyr)
+library(statar)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(broom)
+library(multcomp)
+library(car)
+library(rstatix)
+library(corrplot)
+library(MASS)
+
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, comment = NA)
+
+```
+
+### import the data
+
+```{r}
+
+foster <- read.csv("/Users/monikavlad/Desktop/dataset/Fc2020v1.csv")
+
+```
+
+###wrangling
+cleaning up caretaker family structure
+```{r}
+foster <- foster%>%
+  filter(foster$ctkfamst %in% c("Married couple", "Unmarried couple", "Single female", "Single male"))
+tab(foster, ctkfamst)
+```
+cleaning up race variable
+```{r}
+foster <- foster%>%
+  filter(foster$race %in% c("White", "Black or African American", "American Indian or Alaska Native", "Asian", "Hawaiian or Other Pacific Islander", "More Than One Race"))
+tab(foster, race)
+
+```
+```{r}
+reorder_size <- function(race) {
+  factor(race, levels = names(sort(table(race), decreasing = FALSE)))
+}
+ggplot(foster, aes(x = reorder_size(race))) +
+  geom_bar(color = "#F21D25", fill= "#F21D25") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  coord_flip() +
+  labs(y = "Count", x = "Race") +
+  theme_classic()+
+  theme(legend.position = "none")
+
+
+```
+
+cleaning up physically disabled variable
+```{r}
+foster <- foster %>%
+  filter(foster$phydis %in% c("Yes", "No"))
+tab(foster, phydis)
+```
+
+cleaning up gender
+
+```{r}
+foster <- foster %>%
+  filter(foster$sex %in% c("Female", "Male"))
+tab(foster, sex)
+```
+
+cleaning up clindis
+```{r}
+foster <- foster %>%
+  filter(foster$clindis %in% c("Yes", "No"))
+tab(foster, clindis)
+```
+
+cleaning up mr
+```{r}
+foster <- foster %>%
+  filter(foster$mr %in% c("Yes", "No"))
+tab(foster, mr)
+```
+
+cleaning up vishear
+```{r}
+foster <- foster %>%
+  filter(foster$vishear %in% c("Yes", "No"))
+tab(foster, vishear)
+```
+
+cleaning up PhyAbuse
+```{r}
+foster <- foster %>%
+  filter(foster$phyabuse %in% c("Yes", "No"))
+tab(foster, phyabuse)
+```
+
+cleaning up neglect
+
+```{r}
+foster <- foster %>%
+  filter(foster$neglect %in% c("Yes", "No"))
+tab(foster, neglect)
+```
+
+cleaning up manner of removal
+```{r}
+foster <- foster %>%
+  filter(foster$manrem %in% c("Court ordered", "Voluntary"))
+tab(foster, manrem)
+```
+
+view sexabuse
+```{r}
+tab(foster, sexabuse)
+```
+
+view aaparent
+```{r}
+tab(foster, aaparent)
+```
+
+view daparent
+```{r}
+tab(foster, daparent)
+```
+
+view aachil
+```{r}
+tab(foster, aachild)
+```
+
+view dachild
+```{r}
+tab(foster, dachild)
+```
+
+view childis
+```{r}
+tab(foster, childis)
+```
+
+view chbehprb
+```{r}
+tab(foster, chbehprb)
+```
+
+view prtsjail
+```{r}
+tab(foster, prtsjail)
+```
+
+view abandmnt
+```{r}
+tab(foster, abandmnt)
+```
+view housing
+```{r}
+tab(foster, housing)
+```
+
+view LifeLOS
+```{r}
+sum_up(foster, lifelos)
+```
+
+### Regression wrangling 
+creating a subset with only the variables we are using for analysis
+subset name -> foster.regression
+```{r}
+foster.regression.variables <- c("lifelos", "phyabuse", "sexabuse", "neglect", "aaparent", "daparent", "aachild", "dachild", "childis", "chbehprb", "prtsjail", "abandmnt", "housing")
+foster.regression <- foster[foster.regression.variables]
+```
+
+cleaning lifelos 
+```{r}
+foster.regression$lifelos <- as.numeric(foster.regression$lifelos)
+foster.regression = foster.regression[!foster.regression$lifelos <=0,]
+```
+
+Multiple Linear Regression
+#Predicting the Length of Stay in FC for a child based on reasons of removal from the caretakers home
+#Dependent variable = lifelos= total number of days the child has been in foster care
+#Independent variables in the original model:
+#phyabuse: alleged or substantiated physical abuse, injury or maltreatment of the child by a person responsible for the child`s welfare
+#sexabuse:alleged or substantiated sexual abuse or exploitation of a child by a person who is responsible for the child`s welfare
+#neglect: alleged or substantiated negligent treatment or maltreatment, including failure to provide adequate food, clothing, shelter or care
+#AAparent: the principal caretaker`s compulsive use of alcohol that is not of temporary nature
+#DAparent: the principal caretaker's compulsive use of drugs that is not of temporary nature
+#AAchild: the child's compulsive use of or need for alcohol. Includes infants addicted at birth
+#DAChild: the child's used of drugs that is not of a temporary nature. Includes infants exposed to drugs during pregnancy
+#ChilDis: a clinical diagnosis from home and contact with the foster care system, a clinical diagnosis by a qualified professional of one or more of the following: mental retardation; emotional disturbance, specific learnign disability, hearing, speech or sight impairmnet; physical disability; or other clinically diagnosed handicap
+#ChiBehPrb: child's behavior in the schooland/or community that adversely affects socialization, learning, growth and moral development. 
+#PrtsJail: temporary or permanent placement of a parent or caretaker in jail that adversely affects care of the child
+#Abandmnt: the child has been left alone or with others; caretaker did not return or make whereabouts known
+#HousingL housing facilities were substandard, overcrowded, unsafe or otherwise inadequate resulting in their not being appropriate for the parents and child to resid etoegther. Also includes homelessness
+
+regression model
+```{r}
+foster_model_1 <- lm(foster.regression$lifelos ~ foster.regression$phyabuse + foster.regression$sexabuse + foster.regression$neglect  + foster.regression$childis + foster.regression$aachild + foster.regression$chbehprb  + foster.regression$abandmnt +foster.regression$housing +  foster.regression$prtsjail + foster.regression$daparent + foster.regression$aaparent  + foster.regression$dachild )
+summary(foster_model_1)
+```
+
+Predicted Length = 813.902 + 16.268(phyabuseYes) + 23.809(neglectYes) + 269.254(childisYes) + 20.630(abandmntYes) + 41.423(housingYes) - 11.858(prtsjailYes) - 118.059(daparentYes) - 30.343(aaparentYes) -98.432(dachildYes)
+check normality assumption
+```{r}
+foster_model_1$residuals %>%
+  ggpubr::ggqqplot()
+```
+
+vif
+```{r}
+car::vif(foster_model_1)
+```
+low vif
+lowest vif is one
+
+testing variances
+```{r}
+res <- var.test(lifelos ~ aaparent, data=foster.regression)
+res
+```
+cannot assume equal variances
+We ran a global test to see which variables are significant
+
+t-test for significant variables
+
+phyabuse summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$phyabuse, summary)
+```
+t-test for phyabuse
+```{r}
+t.test(foster.regression$lifelos ~ foster.regression$phyabuse, var.equal=FALSE)
+```
+I am 95% confident that when a child has experienced physical abuse from their caretaker, the child stay 22 to 36 days longer in foster care than a child who has not been physically abused by their caretaker.
+
+sexabuse summary
+```{r}
+by(foster.regression$lifelos, foster.regression$sexabuse, summary)
+```
+t-test for sexabuse
+```{r}
+sexabuse.t <- t.test(foster.regression$lifelos ~ foster.regression$sexabuse, var.equal=FALSE)
+```
+I am 95% confident that when a child has experienced sexual abuse from their caretaker, the child stays 6 to 28 days longer in foster care than a child who has not been sexually abused by their caretaker
+
+neglect summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$neglect, summary)
+```
+t-test for neglect
+```{r}
+neglect.t <- t.test(foster.regression$lifelos ~ foster.regression$neglect, var.equal=FALSE)
+```
+I am 95% confident that when a child has been removed from home due to neglect from the caretaker, the child stays 21 to 30 days longer in foster care than when the child has not been neglected
+
+childis summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$childis, summary)
+```
+t-test for childis
+```{r}
+childis.t <- t.test(foster.regression$lifelos ~ foster.regression$childis, var.equal=FALSE)
+```
+
+I am 95% confident that a child who has been clinically diagnosed with a disability stays 246 to 296 days longer in foster care than a child who was diagnosed to not have any clinical disabilities
+
+chbehprb summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$chbehprb, summary)
+```
+t-test for chbehprb
+```{r}
+chbehprb.t <- t.test(foster.regression$lifelos ~ foster.regression$chbehprb, var.equal=FALSE)
+```
+I am 95% confident that when the child has behavior problems, the child stays 14 to 33 days longer in foster care than a child who does not have behavioral problems. 
+
+abandmnt summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$abandmnt, summary)
+```
+t-test for abandmnt
+```{r}
+abandmnt.t <- t.test(foster.regression$lifelos ~ foster.regression$abandmnt, var.equal=FALSE)
+```
+I am 95% confident that when the child has been abandoned by the caretaker, the child stays 27 to 47 days longer in foster care than the child whose caretaker did not abandon them.
+
+housing summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$housing, summary)
+```
+t-test for housing
+```{r}
+housing.t <- t.test(foster.regression$lifelos ~ foster.regression$housing, var.equal=FALSE)
+```
+I am 95% confident that when the child's caretaker failed to provide safe housing for the child, the child stays 13 to 27 days longer in foster care than when the carektaker provided safe housing for the child
+
+prtsjail summary
+t-test for prtsjail
+```{r}
+by(foster.regression$lifelos, foster.regression$prtsjail, summary)
+```
+t-test for prtsjail
+```{r}
+t.test(foster.regression$lifelos ~ foster.regression$prtsjail, var.equal=FALSE)
+```
+I am 95% confident that when the child's caretaker has been placed in jail(temporary or permanently), the child stays 22 to 38 days less in foster care than when the caretaker has not been placed in jail.
+I am 95% confident that when child's caretaker has not been placed in jail(temporary or permanatly), the child stays 22 to 38 days longer in foster care than when the caretaker has been placed in jail.
+daparent summary
+t-test for daparent
+```{r}
+by(foster.regression$lifelos, foster.regression$daparent, summary)
+```
+t-test for daparent
+```{r}
+daparent.t <- t.test(foster.regression$lifelos ~ foster.regression$daparent, var.equal=FALSE)
+```
+I am 95% confident that when the child`s caretaker has a drug abuse problem, the child stays 115 to 123 days less in foster care than when the caretaker is not a drug abuser.
+I am 95% confident that whne the child's caretaker does not have a drug abuse problem, the child stays 115 to 123 days longer in foster care than when the caretaker is a drug abuser.
+aaparent summary
+
+```{r}
+by(foster.regression$lifelos, foster.regression$aaparent, summary)
+```
+t-test for aaaparent
+```{r}
+aaparent.t <- t.test(foster.regression$lifelos ~ foster.regression$aaparent, var.equal=FALSE)
+```
+I am 95% confident that when the child's caretaker has an alcohol abuse problem, the child stays 27 to 47 days less in foster care than when the caretaker is not an alcohol abuser.
+I am 95% confident that when the child's caretaker does not have an alcohol abuse problem, the child stays 27 to 47 days longer in foster care than when the caretaker is an alcohol abuser
+dachild summary
+t-test for dachild
+```{r}
+by(foster.regression$lifelos, foster.regression$dachild, summary)
+```
+t-test for dachild
+```{r}
+dachild.t <- t.test(foster.regression$lifelos ~ foster.regression$dachild, var.equal=FALSE)
+```
+I am 95% confident that when the child has a drug problem, the child stays 63 to 96 days less in foster care than a child who does not have a drug abuse problem.
+I am 95% confident that when the child does not have a drug problem, the child stays 63 to 96 days longer in foster care than a child who has a drug problem.
+
+relevel all categorical variables 
+binding all ttests and creating a graphic
+```{r}
+foster.regression <- foster.regression %>%
+  mutate(childis = childis %>% 
+           fct_relevel("Yes"))
+foster.regression$childis %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(neglect = neglect %>% 
+           fct_relevel("Yes"))
+foster.regression$neglect %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(abandmnt = abandmnt %>% 
+           fct_relevel("Yes"))
+foster.regression$abandmnt %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(housing = housing %>% 
+           fct_relevel("Yes"))
+foster.regression$housing %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(sexabuse = sexabuse %>% 
+           fct_relevel("Yes"))
+foster.regression$sexabuse %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(chbehprb = chbehprb %>% 
+           fct_relevel("Yes"))
+foster.regression$chbehprb %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(aaparent = aaparent %>% 
+           fct_relevel("Yes"))
+foster.regression$aaparent %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(daparent = daparent %>% 
+           fct_relevel("Yes"))
+foster.regression$daparent %>% levels()
+
+foster.regression <- foster.regression %>%
+  mutate(dachild = dachild %>% 
+           fct_relevel("Yes"))
+foster.regression$dachild %>% levels()
+
+foster.test <-
+  dplyr::bind_rows(
+  foster.regression %>%
+rstatix::t_test(lifelos~neglect, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~childis, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~abandmnt, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~housing, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~sexabuse, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~chbehprb, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~aaparent, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~daparent, detailed=T),
+foster.regression %>%
+  rstatix::t_test(lifelos~dachild, detailed=T)) %>%
+  dplyr::mutate(`Removal Reason`=c("Neglect", "Child Disability", "Abandonment", "Housing", "Sexual Abuse", "Child Behavior Problem", "Alchol Abuse Parent", "Drug Abuse Parent", "Drug Abuse Child"))
+ foster.test %>%
+   ggplot(aes(x=`Removal Reason`, y = estimate, color = "#F21D25")) +
+  geom_point() +
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high)) +
+  geom_hline(yintercept=0, color = "#083D87") +
+   labs(y = "Differences in Mean Length of Stay in Foster Care (yes-no)") +
+  coord_flip() +
+   theme_classic() +
+   theme(legend.position = "none", axis.text = element_text(size = 14), axis.title.y = element_text(size = 12), axis.title.x = element_text(size = 12))
+  
+  
+  
+
+  
+```
+Transformation using boxcox
+```{r}
+bc1 <- boxcox(foster.regression$lifelos ~ foster.regression$phyabuse + foster.regression$sexabuse + foster.regression$neglect + foster.regression$aaparent + foster.regression$daparent + foster.regression$aachild + foster.regression$dachild + foster.regression$childis + foster.regression$chbehprb + foster.regression$prtsjail + foster.regression$abandmnt +foster.regression$housing)
+lambda <- bc1$x[which.max(bc1$y)]
+print(lambda)
+hist(((foster.regression$lifelos^lambda-1)/lambda),
+     col = 'skyblue3', breaks = 10)
+foster.regression$lifelos_transformed <- foster.regression$lifelos^lambda
+foster_reg_transformed <- lm(foster.regression$lifelos_transformed ~ foster.regression$phyabuse + foster.regression$sexabuse + foster.regression$neglect  + foster.regression$aachild  + foster.regression$childis + foster.regression$chbehprb  + foster.regression$abandmnt +foster.regression$housing + foster.regression$aaparent + foster.regression$daparent + foster.regression$dachild + foster.regression$prtsjail)
+summary(foster_reg_transformed)
+```
+```{r}
+f_model <- lm(foster.regression$lifelos_transformed ~  foster.regression$sexabuse + foster.regression$neglect  + foster.regression$aachild  + foster.regression$childis + foster.regression$chbehprb  + foster.regression$abandmnt +foster.regression$housing + foster.regression$aaparent + foster.regression$daparent + foster.regression$dachild + foster.regression$prtsjail)
+summary(f_model)
+```
+
+```{r}
+f_model_1 <- lm(foster.regression$lifelos_transformed ~  foster.regression$sexabuse + foster.regression$neglect  + foster.regression$aachild  + foster.regression$childis + foster.regression$chbehprb  + foster.regression$abandmnt +foster.regression$housing + foster.regression$aaparent + foster.regression$daparent + foster.regression$dachild)
+summary(f_model_1)
+```
+
+
+```{r}
+f_model_2 <- lm(foster.regression$lifelos_transformed ~  foster.regression$sexabuse + foster.regression$neglect + foster.regression$childis + foster.regression$chbehprb  + foster.regression$abandmnt +foster.regression$housing + foster.regression$aaparent + foster.regression$daparent + foster.regression$dachild)
+summary(f_model_2)
+```
+
+```{r}
+f_model_3 <- lm(foster.regression$lifelos_transformed ~  foster.regression$neglect + foster.regression$childis + foster.regression$abandmnt +foster.regression$housing + foster.regression$aaparent + foster.regression$daparent + foster.regression$dachild +foster.regression$sexabuse +foster.regression$chbehprb)
+summary(f_model_3)
+```
+
+check normality assumption
+```{r}
+foster_reg_transformed$residuals %>%
+  ggpubr::ggqqplot()
+```
+vif
+```{r}
+car::vif(foster_reg_transformed)
+```
+vif are still low
+check for constant variance
+```{r}
+plot(foster_reg_transformed,1)
+summary(foster_reg_transformed)
+```
+the presence of physical abuse, sex abuse, neglect, aachild, childis, chbehprb, abandmnt, housing predict longer length of of stay in foster care
+
+############### CHI SQUARE ###############
+creating a subset for chi square
+```{r}
+foster.chi.variables <- c("ctkfamst", "race")
+foster.chi <- foster[foster.chi.variables]
+```
+table for observed count
+```{r}
+tbl2 <- table(foster.chi$race, foster.chi$ctkfamst)
+tbl2
+```
+table for observed count
+```{r}
+tbl3 <- table(foster.chi$ctkfamst, foster.chi$race)
+tbl3
+```
+observed proportion
+```{r}
+proportions(tbl2,1)
+```
+chi square independence test + correlation plot
+```{r}
+chisq2 <- chisq.test(x=tbl2, correct=FALSE)
+colors6<-c("#664799" , "#895FCC", "#A976FC", "#0DDBB2","#0AAD8C", "#07846B")
+colors2<- c("#083D87", "#F21D25")
+names(chisq2)
+corrplot(chisq2$residuals, is.cor = FALSE, col=colors2, tl.col="black") 
+```
+
+
+############### SIMPLE LINEAR REGRESSION ###############
+cleaning up age
+```{r}
+foster = foster[!foster$ageatstart == "DOB Missing",]
+foster$ageatstart <- as.numeric(foster$ageatstart)
+foster = foster[!foster$ageatstart <=0,]
+```
+creating a subset
+```{r}
+foster.slr.variables <- c("ctkfamst", "race", "lifelos", "ageatstart", "sex")
+foster.slr <- foster[foster.slr.variables]
+sum_up(foster.slr, ageatstart)
+```
+cleaning up gender
+```{r}
+foster.slr <- foster.slr %>%
+  filter(foster.slr$sex %in% c("Female", "Male"))
+tab(foster, sex)
+```
+cleaning up caretaker family structure
+```{r}
+foster.slr <- foster.slr%>%
+  filter(foster.slr$ctkfamst %in% c("Married couple", "Unmarried couple", "Single female", "Single male"))
+tab(foster.slr, ctkfamst)
+```
+cleaning up race variable
+```{r}
+foster.slr <- foster.slr%>%
+  filter(foster.slr$race %in% c("White", "Black or African American", "American Indian or Alaska Native", "Asian", "Hawaiian or Other Pacific Islander", "More Than One Race"))
+tab(foster.slr, race)
+```
+
+only keeping complete cases
+```{r}
+foster.slr <- foster.slr[complete.cases(foster.slr),]
+```
+slr model
+```{r}
+reg_model <- lm(lifelos ~ ageatstart, data=foster.slr)
+summary(reg_model)
+```
+confidence interval
+```{r}
+confint(reg_model, "ageatstart", level=0.95)
+```
+check normality assumption
+```{r}
+reg_model$residuals %>%
+  ggpubr::ggqqplot()
+```
+histogram of the residuals
+```{r}
+hist(reg_model$residuals)
+```
+check constant variance
+```{r}
+plot(reg_model, 1)
+```
+multi layer scatterplot
+```{r}
+foster.slr %>%
+  dplyr::arrange(desc(ageatstart)) %>%
+  ggplot(aes(as.numeric(ageatstart), as.numeric(lifelos))) +
+  #geom_point(aes(size=.000001, color=sex), alpha=0.5) +
+  geom_smooth(aes(color=sex), method='lm', se=F) +
+  labs(x = "Age",
+       y = "Length of Stay in FC (in days)",
+       title = "Scatterplot of Length of Stay in Foster Care by Age of the Child") +
+  theme_classic() +
+  theme(plot.title=element_text(hjust=0.1)) + facet_wrap(~race)
+```
+```{r}
+tab(foster.slr, race)
+```
+
+############### CHI SQUARE ###############
+creating a subset for chi square
+```{r}
+foster.chi1.variables <- c("ctkfamst", "disreasn")
+foster.chi1 <- foster[foster.chi1.variables]
+```
+cleaning up disreasn variable
+```{r}
+foster.chi1 <- foster.chi1 %>%
+  filter(foster.chi1$disreasn %in% c("Adoption", "Death of child", "Emancipation", "Guardianchip", "Living with other relative(s)", "Reunified with parent, primary caretaker", "Runaway"))
+tab(foster.chi1, disreasn)
+```
+table for observed count
+```{r}
+tbl1 <- table(foster.chi1$disreasn, foster.chi1$ctkfamst)
+tbl1
+```
+table for observed count
+```{r}
+tbl <- table(foster.chi1$ctkfamst, foster.chi1$disreasn)
+tbl
+```
+observed proportion
+```{r}
+proportions(tbl,1)
+```
+chi square independence test
+```{r}
+chisq <- chisq.test(x=tbl1, correct=FALSE)
+```
+view disreasn
+```{r}
+tab(foster, disreasn)
+```
+correlation plot
+```{r}
+#tl.srt tilts the labels at a 45 degree angle
+#tl.col specifies the color of the factor labels on the contingency table
+colors6<-c("#664799" , "#895FCC", "#A976FC", "#0DDBB2","#0AAD8C", "#07846B")
+colors2<- c("#083D87", "#F21D25")
+names(chisq)
+corrplot(chisq$residuals, is.cor = FALSE, col=colors2, tl.col="black")
+#corrplot(chisq$stdres, is.cor = FALSE, col=colors2, tl.col="black", tl.srt=45)
+#corrplot::corrplot(chisq$residuals, is.cor = FALSE, col=colors2, tl.col="black", tl.srt=45)
+```
+
+############### ONE WAY ANOVA ###############
+
+Does the race of the child have an effect on the length of child`s stay in foster care
+H0: The race of the child has no affect on the length of child`s stay in foster care
+Ha: Child of at least one race has a diiferent length of stay in foster care
+Race: White, American Indian or Alaska Native, Asian, Black or African American, Hawaiian or Other Pacific Islander, More than One Race
+How many days the child has spent in foster care
+Type of measure: days
+One categorical with 6 categories
+
+creating a subset for one way anova
+```{r}
+foster.one.way.variables <- c("lifelos", "race")
+foster.one.way <- foster[foster.one.way.variables]
+```
+cleaning up race variable
+```{r}
+foster.one.way <- foster.one.way%>%
+  filter(foster.one.way$race %in% c("White", "Black or African American", "American Indian or Alaska Native", "Asian", "Hawaiian or Other Pacific Islander", "More Than One Race"))
+tab(foster.one.way, race)
+```
+cleaning up lifelos
+```{r}
+foster.one.way = foster.one.way[!foster.one.way$lifelos <=0,]
+sum_up(foster.one.way, lifelos)
+```
+
+
+HOMOGENEITY OF VARIANCES
+rotate (rename to make shorter)
+```{r}
+plot <- ggplot(foster.one.way, aes(x=lifelos, y = race, color = race)) +
+  labs(y = "Race of the Child", x = "Length of Stay in Foster Care (in days)") +
+  geom_boxplot()+theme(legend.position = "none") 
+plot
+```
+
+
+ONE WAY ANOVA
+```{r}
+one.way1 <- aov(lifelos ~ race, data = foster.one.way)
+summary(one.way1)
+```
+summary statistics
+```{r}
+by(foster.one.way$lifelos, foster.one.way$race, summary)
+tab(foster.one.way, race)
+```
+post-hoc test
+```{r}
+TukeyHSD(one.way1, conf.level = 0.95)
+plot(TukeyHSD(one.way1, conf.level = 0.95), las=1, col = "red")
+tukey.plot.aov <- aov(lifelos ~ race, data=foster.one.way)
+```
+mean, sd
+```{r}
+group_by(foster.one.way, race) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
+std 905/574 <2
+
+Welchs Anova nonparametric test(when we have unequal variances)
+having unequal variances can increase our alpha up to 20%
+
+#fs <- oneway.test(lifelos ~ race, data=foster.one.way)
+#fs
+#foster.one.way%>% welch_anova_test(lifelos ~ race)
+
+#foster.one.way%>%group_by(race) %>%
+#  welch_anova_test(lifelos ~ race)
+
+```{r}
+#games_howell_test(foster, lifelos ~race, conf.level = 0.95)
+#mean plots
+ggline(foster, x = "race", y = "lifelos",
+       add = c("mean_se", "jitter"),
+       ylab = "Length of Stay in FC", xlab = "Race of the Child")
+```
+boxplot
+```{r}
+boxplot(lifelos ~ race, data = foster.one.way,
+        xlab = "Race of the Child", ylab = "Length of Stay in FC",
+        frame = FALSE)
+```
+plotmeans
+```{r}
+plotmeans(lifelos ~ race, data=foster.one.way, frame = FALSE,
+          xlab = "Race of the Child", ylab = "Length of Stay in FC",
+          main = "Mean Plot with 95% CI")
+```
+diagnostic
+```{r}
+par(mfrow=c(2,2))
+plot(one.way1)
+```
+residuals vs fitted
+```{r}
+plot(one.way1, 1)
+```
+levenes test
+```{r}
+leveneTest(lifelos ~ race, data = foster.one.way)
+```
+normality
+```{r}
+plot(one.way1, 2)
+```
+nonparametric
+```{r}
+kruskal.test(lifelos ~ race, data = foster.one.way)
+```
+
+
+
+boxplot
+```{r}
+ggplot(foster.one.way, aes(race, lifelos)) + 
+  geom_boxplot(aes(fill = race), show.legend = FALSE) +
+  labs(x="Race of the Child", y="Length of Stay in Foster Care (in days)") +
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  #geom_text(data = foster.one.way, aes(x = race, y = lifelos), size = 3, vjust=-1, hjust =-1) +
+  scale_fill_brewer(palette = "Pastel1")
+```
