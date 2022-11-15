@@ -49,6 +49,15 @@ tab(foster, race)
 
 ```
 ```{r}
+foster$race <- recode_factor(foster$race, "White"="White", "African American" = "Black or African American", "American Indian"="American Indian or Alaska Native", "Asian" = "Asian", "Pacific Islander" = "Hawaiian or Other Pacific Islander", "Multiple Race"="More Than One Race")
+levels(foster$race)
+```
+renaming names for race categories to preserve space on the poster
+```{r}
+foster$race <- recode_factor(foster$race, "White"="White", "Balck or African American" = "African American", "American Indian or Alaska Native" = "American Indian", "Asian" = "Asian", "Hawaiian or Other Pacific Islander" = "Pacific Islander", "More Than One Race" = "Multiple Race")
+levels(foster$race)
+```
+```{r}
 reorder_size <- function(race) {
   factor(race, levels = names(sort(table(race), decreasing = FALSE)))
 }
@@ -204,7 +213,7 @@ Multiple Linear Regression
 #ChiBehPrb: child's behavior in the schooland/or community that adversely affects socialization, learning, growth and moral development. 
 #PrtsJail: temporary or permanent placement of a parent or caretaker in jail that adversely affects care of the child
 #Abandmnt: the child has been left alone or with others; caretaker did not return or make whereabouts known
-#HousingL housing facilities were substandard, overcrowded, unsafe or otherwise inadequate resulting in their not being appropriate for the parents and child to resid etoegther. Also includes homelessness
+#Housing housing facilities were substandard, overcrowded, unsafe or otherwise inadequate resulting in their not being appropriate for the parents and child to resid etoegther. Also includes homelessness
 
 regression model
 ```{r}
@@ -501,11 +510,13 @@ table for observed count
 ```{r}
 tbl2 <- table(foster.chi$race, foster.chi$ctkfamst)
 tbl2
+proportions(tbl2, 1)
 ```
 table for observed count
 ```{r}
 tbl3 <- table(foster.chi$ctkfamst, foster.chi$race)
 tbl3
+
 ```
 observed proportion
 ```{r}
@@ -597,6 +608,7 @@ tab(foster.slr, race)
 ```
 
 ############### CHI SQUARE ###############
+
 creating a subset for chi square
 ```{r}
 foster.chi1.variables <- c("ctkfamst", "disreasn")
@@ -607,6 +619,12 @@ cleaning up disreasn variable
 foster.chi1 <- foster.chi1 %>%
   filter(foster.chi1$disreasn %in% c("Adoption", "Death of child", "Emancipation", "Guardianchip", "Living with other relative(s)", "Reunified with parent, primary caretaker", "Runaway"))
 tab(foster.chi1, disreasn)
+```
+changing names of categories for discharge reason to make space on poster
+```{r}
+
+foster.chi1$disreasn <-  recode_factor(foster.chi1$disreasn, "Reunified with parent, primary caretaker"= "Reunified with parent")
+levels(foster.chi1$disreasn)
 ```
 table for observed count
 ```{r}
