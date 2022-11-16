@@ -2,7 +2,7 @@
 title: "VLAD.FOSTER"
 author: "Vlad"
 date: "2022-11-06"
-output: html_document
+output: pdf_document
 ---
 
 ### Set up Chunk
@@ -34,29 +34,38 @@ foster <- read.csv("/Users/monikavlad/Desktop/dataset/Fc2020v1.csv")
 
 ```
 
-###wrangling
+### wrangling
 cleaning up caretaker family structure
 ```{r}
 foster <- foster%>%
   filter(foster$ctkfamst %in% c("Married couple", "Unmarried couple", "Single female", "Single male"))
 tab(foster, ctkfamst)
 ```
-cleaning up race variable
+
+```{r}
+group_by(foster, ctkfamst) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
+race variable
 ```{r}
 foster <- foster%>%
   filter(foster$race %in% c("White", "Black or African American", "American Indian or Alaska Native", "Asian", "Hawaiian or Other Pacific Islander", "More Than One Race"))
 tab(foster, race)
+```
 
-```
-```{r}
-foster$race <- recode_factor(foster$race, "White"="White", "African American" = "Black or African American", "American Indian"="American Indian or Alaska Native", "Asian" = "Asian", "Pacific Islander" = "Hawaiian or Other Pacific Islander", "Multiple Race"="More Than One Race")
-levels(foster$race)
-```
 renaming names for race categories to preserve space on the poster
 ```{r}
 foster$race <- recode_factor(foster$race, "White"="White", "Balck or African American" = "African American", "American Indian or Alaska Native" = "American Indian", "Asian" = "Asian", "Hawaiian or Other Pacific Islander" = "Pacific Islander", "More Than One Race" = "Multiple Race")
 levels(foster$race)
 ```
+plot for race
 ```{r}
 reorder_size <- function(race) {
   factor(race, levels = names(sort(table(race), decreasing = FALSE)))
@@ -68,8 +77,6 @@ ggplot(foster, aes(x = reorder_size(race))) +
   labs(y = "Count", x = "Race") +
   theme_classic()+
   theme(legend.position = "none")
-
-
 ```
 
 cleaning up physically disabled variable
@@ -77,6 +84,18 @@ cleaning up physically disabled variable
 foster <- foster %>%
   filter(foster$phydis %in% c("Yes", "No"))
 tab(foster, phydis)
+```
+additional info about phydis
+```{r}
+group_by(foster, phydis) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
 ```
 
 cleaning up gender
@@ -86,6 +105,18 @@ foster <- foster %>%
   filter(foster$sex %in% c("Female", "Male"))
 tab(foster, sex)
 ```
+additional info about gender
+```{r}
+group_by(foster, sex) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 
 cleaning up clindis
 ```{r}
@@ -93,12 +124,35 @@ foster <- foster %>%
   filter(foster$clindis %in% c("Yes", "No"))
 tab(foster, clindis)
 ```
-
+additional info about clindis
+```{r}
+group_by(foster, clindis) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 cleaning up mr
 ```{r}
 foster <- foster %>%
   filter(foster$mr %in% c("Yes", "No"))
 tab(foster, mr)
+```
+additional info about mr
+```{r}
+group_by(foster, mr) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
 ```
 
 cleaning up vishear
@@ -107,7 +161,18 @@ foster <- foster %>%
   filter(foster$vishear %in% c("Yes", "No"))
 tab(foster, vishear)
 ```
-
+additional info about vishear
+```{r}
+group_by(foster, daparent) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 cleaning up PhyAbuse
 ```{r}
 foster <- foster %>%
@@ -144,8 +209,19 @@ view daparent
 ```{r}
 tab(foster, daparent)
 ```
+```{r}
+group_by(foster, daparent) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 
-view aachil
+view aachild
 ```{r}
 tab(foster, aachild)
 ```
@@ -158,6 +234,18 @@ tab(foster, dachild)
 view childis
 ```{r}
 tab(foster, childis)
+```
+
+```{r}
+group_by(foster, childis) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
 ```
 
 view chbehprb
@@ -222,6 +310,7 @@ summary(foster_model_1)
 ```
 
 Predicted Length = 813.902 + 16.268(phyabuseYes) + 23.809(neglectYes) + 269.254(childisYes) + 20.630(abandmntYes) + 41.423(housingYes) - 11.858(prtsjailYes) - 118.059(daparentYes) - 30.343(aaparentYes) -98.432(dachildYes)
+
 check normality assumption
 ```{r}
 foster_model_1$residuals %>%
@@ -256,6 +345,18 @@ t.test(foster.regression$lifelos ~ foster.regression$phyabuse, var.equal=FALSE)
 ```
 I am 95% confident that when a child has experienced physical abuse from their caretaker, the child stay 22 to 36 days longer in foster care than a child who has not been physically abused by their caretaker.
 
+additional info for phyabuse
+```{r}
+group_by(foster, phyabuse) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 sexabuse summary
 ```{r}
 by(foster.regression$lifelos, foster.regression$sexabuse, summary)
@@ -263,6 +364,18 @@ by(foster.regression$lifelos, foster.regression$sexabuse, summary)
 t-test for sexabuse
 ```{r}
 sexabuse.t <- t.test(foster.regression$lifelos ~ foster.regression$sexabuse, var.equal=FALSE)
+```
+additional info for sexabuse
+```{r}
+group_by(foster, sexabuse) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
 ```
 I am 95% confident that when a child has experienced sexual abuse from their caretaker, the child stays 6 to 28 days longer in foster care than a child who has not been sexually abused by their caretaker
 
@@ -275,6 +388,18 @@ t-test for neglect
 ```{r}
 neglect.t <- t.test(foster.regression$lifelos ~ foster.regression$neglect, var.equal=FALSE)
 ```
+additional info for neglect
+```{r}
+group_by(foster, neglect) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 I am 95% confident that when a child has been removed from home due to neglect from the caretaker, the child stays 21 to 30 days longer in foster care than when the child has not been neglected
 
 childis summary
@@ -286,9 +411,19 @@ t-test for childis
 ```{r}
 childis.t <- t.test(foster.regression$lifelos ~ foster.regression$childis, var.equal=FALSE)
 ```
-
 I am 95% confident that a child who has been clinically diagnosed with a disability stays 246 to 296 days longer in foster care than a child who was diagnosed to not have any clinical disabilities
-
+additional info for childis
+```{r}
+group_by(foster, daparent) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 chbehprb summary
 
 ```{r}
@@ -300,6 +435,18 @@ chbehprb.t <- t.test(foster.regression$lifelos ~ foster.regression$chbehprb, var
 ```
 I am 95% confident that when the child has behavior problems, the child stays 14 to 33 days longer in foster care than a child who does not have behavioral problems. 
 
+additional info for daparent
+```{r}
+group_by(foster, daparent) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 abandmnt summary
 
 ```{r}
@@ -311,6 +458,18 @@ abandmnt.t <- t.test(foster.regression$lifelos ~ foster.regression$abandmnt, var
 ```
 I am 95% confident that when the child has been abandoned by the caretaker, the child stays 27 to 47 days longer in foster care than the child whose caretaker did not abandon them.
 
+additional info for abandmnt
+```{r}
+group_by(foster, abandmnt) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 housing summary
 
 ```{r}
@@ -322,6 +481,18 @@ housing.t <- t.test(foster.regression$lifelos ~ foster.regression$housing, var.e
 ```
 I am 95% confident that when the child's caretaker failed to provide safe housing for the child, the child stays 13 to 27 days longer in foster care than when the carektaker provided safe housing for the child
 
+additional info for housing
+```{r}
+group_by(foster, housing) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 prtsjail summary
 t-test for prtsjail
 ```{r}
@@ -334,6 +505,19 @@ t.test(foster.regression$lifelos ~ foster.regression$prtsjail, var.equal=FALSE)
 I am 95% confident that when the child's caretaker has been placed in jail(temporary or permanently), the child stays 22 to 38 days less in foster care than when the caretaker has not been placed in jail.
 I am 95% confident that when child's caretaker has not been placed in jail(temporary or permanatly), the child stays 22 to 38 days longer in foster care than when the caretaker has been placed in jail.
 daparent summary
+
+additional info for prtsjail
+```{r}
+group_by(foster, prtsjail) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 t-test for daparent
 ```{r}
 by(foster.regression$lifelos, foster.regression$daparent, summary)
@@ -343,7 +527,21 @@ t-test for daparent
 daparent.t <- t.test(foster.regression$lifelos ~ foster.regression$daparent, var.equal=FALSE)
 ```
 I am 95% confident that when the child`s caretaker has a drug abuse problem, the child stays 115 to 123 days less in foster care than when the caretaker is not a drug abuser.
-I am 95% confident that whne the child's caretaker does not have a drug abuse problem, the child stays 115 to 123 days longer in foster care than when the caretaker is a drug abuser.
+I am 95% confident that whne the child's caretaker does not have a drug abuse problem, the child stays 115 to 123 days longer in foster care than when the caretaker is a drug abuser
+
+additional info for daparent
+```{r}
+group_by(foster, daparent) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
+
 aaparent summary
 
 ```{r}
@@ -355,6 +553,19 @@ aaparent.t <- t.test(foster.regression$lifelos ~ foster.regression$aaparent, var
 ```
 I am 95% confident that when the child's caretaker has an alcohol abuse problem, the child stays 27 to 47 days less in foster care than when the caretaker is not an alcohol abuser.
 I am 95% confident that when the child's caretaker does not have an alcohol abuse problem, the child stays 27 to 47 days longer in foster care than when the caretaker is an alcohol abuser
+
+additional info for aaparent
+```{r}
+group_by(foster, aaparent) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 dachild summary
 t-test for dachild
 ```{r}
@@ -367,6 +578,18 @@ dachild.t <- t.test(foster.regression$lifelos ~ foster.regression$dachild, var.e
 I am 95% confident that when the child has a drug problem, the child stays 63 to 96 days less in foster care than a child who does not have a drug abuse problem.
 I am 95% confident that when the child does not have a drug problem, the child stays 63 to 96 days longer in foster care than a child who has a drug problem.
 
+additional info for dachild
+```{r}
+group_by(foster, dachild) %>%
+  summarise(
+    count = n(),
+    mean = mean(lifelos, na.rm = TRUE),
+    sd = sd(lifelos, na.rm = TRUE),
+    median = median(lifelos, na.rm = TRUE),
+    min = min(lifelos, na.rm = TRUE),
+    max = max(lifelos, na.rm = TRUE)
+  )
+```
 relevel all categorical variables 
 binding all ttests and creating a graphic
 ```{r}
