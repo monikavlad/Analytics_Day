@@ -2,7 +2,7 @@
 title: "VLAD.FOSTER"
 author: "Vlad"
 date: "2022-11-06"
-output: pdf_document
+output: html_document
 ---
 
 ### Set up Chunk
@@ -62,7 +62,7 @@ tab(foster, race)
 
 renaming names for race categories to preserve space on the poster
 ```{r}
-foster$race <- recode_factor(foster$race, "White"="White", "Balck or African American" = "African American", "American Indian or Alaska Native" = "American Indian", "Asian" = "Asian", "Hawaiian or Other Pacific Islander" = "Pacific Islander", "More Than One Race" = "Multiple Race")
+foster$race <- recode_factor(foster$race, "White"="White", "Black or African American" = "African American", "American Indian or Alaska Native" = "American Indian", "Asian" = "Asian", "Hawaiian or Other Pacific Islander" = "Pacific Islander", "More Than One Race" = "Multiple Race")
 levels(foster$race)
 ```
 plot for race
@@ -815,7 +815,7 @@ plot(reg_model, 1)
 ```
 multi layer scatterplot
 ```{r}
-foster.slr %>%
+foster %>%
   dplyr::arrange(desc(ageatstart)) %>%
   ggplot(aes(as.numeric(ageatstart), as.numeric(lifelos))) +
   #geom_point(aes(size=.000001, color=sex), alpha=0.5) +
@@ -901,7 +901,7 @@ foster.one.way <- foster[foster.one.way.variables]
 cleaning up race variable
 ```{r}
 foster.one.way <- foster.one.way%>%
-  filter(foster.one.way$race %in% c("White", "Black or African American", "American Indian or Alaska Native", "Asian", "Hawaiian or Other Pacific Islander", "More Than One Race"))
+  filter(foster.one.way$race %in% c("White", "African American", "American Indian", "Asian", "Pacific Islander", "Multiple Race"))
 tab(foster.one.way, race)
 ```
 cleaning up lifelos
@@ -914,7 +914,7 @@ sum_up(foster.one.way, lifelos)
 HOMOGENEITY OF VARIANCES
 rotate (rename to make shorter)
 ```{r}
-plot <- ggplot(foster.one.way, aes(x=lifelos, y = race, color = race)) +
+plot <- ggplot(foster, aes(x=lifelos, y = race, color = race)) +
   labs(y = "Race of the Child", x = "Length of Stay in Foster Care (in days)") +
   geom_boxplot()+theme(legend.position = "none") 
 plot
